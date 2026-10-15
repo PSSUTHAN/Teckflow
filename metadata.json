@@ -1,6 +1,6 @@
 {
   "name": "TaskFlow - MERN Task Management Application",
-  "description": "A full-stack responsive Task Management Web Application with dashboard statistics, CRUD operations, priority filtering, and MongoDB integration.",
+  "description": "A full-stack responsive Task Management Web Application with dashboard statistics, CRUD operations, priority filtering, and MySQL database integration.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

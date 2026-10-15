@@ -1,15 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Calendar, CheckCircle2, Circle, Clock, Edit3, Trash2, AlertCircle } from 'lucide-react';
-import { Task, TaskPriority, TaskStatus } from '../types/task';
 
-interface TaskCardProps {
-  task: Task;
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
-  onToggleStatus: (task: Task) => void;
-}
-
-export const TaskCard: React.FC<TaskCardProps> = ({
+export const TaskCard = ({
   task,
   onEdit,
   onDelete,
@@ -18,14 +10,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const isCompleted = task.status === 'Completed';
 
   // Overdue check
-  const isOverdue = React.useMemo(() => {
+  const isOverdue = useMemo(() => {
     if (!task.dueDate || isCompleted) return false;
     const dueTime = new Date(task.dueDate).getTime();
     return !isNaN(dueTime) && dueTime < Date.now();
   }, [task.dueDate, isCompleted]);
 
   // Formatted dates
-  const formattedDueDate = React.useMemo(() => {
+  const formattedDueDate = useMemo(() => {
     if (!task.dueDate) return null;
     const d = new Date(task.dueDate);
     if (isNaN(d.getTime())) return null;
@@ -41,14 +33,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     High: 'text-rose-600 font-semibold',
     Medium: 'text-amber-600 font-medium',
     Low: 'text-slate-600 font-normal',
-  }[task.priority || 'Medium'];
+  }[task.priority || 'Medium'] || 'text-slate-600 font-normal';
 
   // Status visual representation
   const statusColor = {
     Completed: 'text-emerald-600',
     'In Progress': 'text-blue-600',
     Pending: 'text-slate-500',
-  }[task.status];
+  }[task.status] || 'text-slate-500';
 
   return (
     <div
@@ -94,7 +86,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        {/* Clean Unboxed Metadata with Typographic Separators (Zero-Pill Discipline) */}
+        {/* Clean Unboxed Metadata with Typographic Separators */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-500 mt-4 pt-3 border-t border-slate-100">
           <span className={`inline-flex items-center gap-1 ${statusColor}`}>
             <span
@@ -136,7 +128,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
       {/* Card Actions Footer */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
         <span className="font-mono text-[11px] tabular-nums text-slate-400 truncate max-w-[140px]">
-          ID: {task.id.slice(-6)}
+          ID: {task.id?.slice(-6) || ''}
         </span>
 
         <div className="flex items-center gap-1">
@@ -163,3 +155,5 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     </div>
   );
 };
+
+export default TaskCard;

@@ -1,30 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Navbar } from './components/Navbar';
-import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './pages/Dashboard';
-import { TasksPage } from './pages/TasksPage';
-import { TaskForm } from './components/TaskForm';
-import { DeleteConfirmModal } from './components/DeleteConfirmModal';
-import { DatabaseStatusModal } from './components/DatabaseStatusModal';
-import { ToastContainer } from './components/Toast';
-import { taskService } from './services/taskService';
-import {
-  Task,
-  TaskFilterState,
-  TaskFormData,
-  TaskStats,
-  TaskStatus,
-  ToastMessage,
-} from './types/task';
+import { Navbar } from './components/Navbar.jsx';
+import { Sidebar } from './components/Sidebar.jsx';
+import { Dashboard } from './pages/Dashboard.jsx';
+import { Tasks } from './pages/Tasks.jsx';
+import { TaskForm } from './components/TaskForm.jsx';
+import { DeleteConfirmModal } from './components/DeleteConfirmModal.jsx';
+import { DatabaseStatusModal } from './components/DatabaseStatusModal.jsx';
+import { ToastContainer } from './components/Toast.jsx';
+import { taskService } from './services/taskService.js';
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'tasks'>('dashboard');
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [stats, setStats] = useState<TaskStats | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [tasks, setTasks] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filters State
-  const [filters, setFilters] = useState<TaskFilterState>({
+  const [filters, setFilters] = useState({
     status: 'All',
     priority: 'All',
     search: '',
@@ -35,16 +27,16 @@ export default function App() {
 
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDbModalOpen, setIsDbModalOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Toasts
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [toasts, setToasts] = useState([]);
 
-  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const addToast = (message, type = 'success') => {
     const id = Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -52,7 +44,7 @@ export default function App() {
     }, 3500);
   };
 
-  const dismissToast = (id: string) => {
+  const dismissToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
@@ -73,7 +65,7 @@ export default function App() {
 
       setTasks(fetchedTasks);
       setStats(fetchedStats);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load tasks:', err);
       addToast(
         err.response?.data?.message || 'Unable to connect to task service. Using local cache.',
@@ -89,7 +81,7 @@ export default function App() {
   }, [loadData]);
 
   // Handle Create or Update submission
-  const handleSaveTask = async (formData: TaskFormData) => {
+  const handleSaveTask = async (formData) => {
     if (editingTask) {
       await taskService.updateTask(editingTask.id, formData);
       addToast(`Task "${formData.title}" updated successfully!`, 'success');
@@ -102,9 +94,9 @@ export default function App() {
   };
 
   // Handle Quick Status Toggle
-  const handleToggleStatus = async (task: Task) => {
+  const handleToggleStatus = async (task) => {
     try {
-      let nextStatus: TaskStatus = 'Completed';
+      let nextStatus = 'Completed';
       if (task.status === 'Completed') {
         nextStatus = 'Pending';
       } else if (task.status === 'Pending') {
@@ -124,7 +116,7 @@ export default function App() {
       // Refresh stats quietly
       const updatedStats = await taskService.getStats();
       setStats(updatedStats);
-    } catch (err: any) {
+    } catch (err) {
       addToast('Failed to update task status', 'error');
       loadData();
     }
@@ -139,7 +131,7 @@ export default function App() {
       addToast(`Task "${taskToDelete.title}" deleted`, 'info');
       setTaskToDelete(null);
       await loadData();
-    } catch (err: any) {
+    } catch (err) {
       addToast(err.response?.data?.message || 'Failed to delete task', 'error');
     } finally {
       setIsDeleting(false);
@@ -159,7 +151,7 @@ export default function App() {
   };
 
   // Navigation shortcuts
-  const handleSelectFilterShortcut = (status: string) => {
+  const handleSelectFilterShortcut = (status) => {
     setCurrentTab('tasks');
     setFilters((prev) => ({
       ...prev,
@@ -226,7 +218,7 @@ export default function App() {
               onToggleStatus={handleToggleStatus}
             />
           ) : (
-            <TasksPage
+            <Tasks
               tasks={tasks}
               isLoading={isLoading}
               filters={filters}

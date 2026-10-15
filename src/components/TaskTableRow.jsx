@@ -1,15 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CheckCircle2, Circle, Clock, Edit3, Trash2, AlertCircle } from 'lucide-react';
-import { Task } from '../types/task';
 
-interface TaskTableRowProps {
-  task: Task;
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
-  onToggleStatus: (task: Task) => void;
-}
-
-export const TaskTableRow: React.FC<TaskTableRowProps> = ({
+export const TaskTableRow = ({
   task,
   onEdit,
   onDelete,
@@ -17,13 +9,13 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
 }) => {
   const isCompleted = task.status === 'Completed';
 
-  const isOverdue = React.useMemo(() => {
+  const isOverdue = useMemo(() => {
     if (!task.dueDate || isCompleted) return false;
     const dueTime = new Date(task.dueDate).getTime();
     return !isNaN(dueTime) && dueTime < Date.now();
   }, [task.dueDate, isCompleted]);
 
-  const formattedDueDate = React.useMemo(() => {
+  const formattedDueDate = useMemo(() => {
     if (!task.dueDate) return '—';
     const d = new Date(task.dueDate);
     if (isNaN(d.getTime())) return '—';
@@ -38,13 +30,13 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
     High: 'text-rose-600 font-semibold',
     Medium: 'text-amber-600 font-medium',
     Low: 'text-slate-600 font-normal',
-  }[task.priority || 'Medium'];
+  }[task.priority || 'Medium'] || 'text-slate-600 font-normal';
 
   const statusColor = {
     Completed: 'text-emerald-700 font-medium',
     'In Progress': 'text-blue-700 font-medium',
     Pending: 'text-slate-600 font-normal',
-  }[task.status];
+  }[task.status] || 'text-slate-600 font-normal';
 
   return (
     <tr
@@ -145,3 +137,5 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
     </tr>
   );
 };
+
+export default TaskTableRow;

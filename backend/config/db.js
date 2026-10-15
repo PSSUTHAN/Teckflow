@@ -1,32 +1,26 @@
-import mongoose from 'mongoose';
+import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
-import { ITask } from '../models/Task.js';
 
-export interface DbStatus {
-  isConnectedToMongo: boolean;
-  engine: 'mongodb' | 'file_storage';
-  connectionUri: string;
-  databaseName?: string;
-  lastConnectedAt?: string;
-  errorMessage?: string;
-}
+let pool = null;
 
-const dbState: DbStatus = {
-  isConnectedToMongo: false,
+const dbState = {
+  isConnectedToMySQL: false,
   engine: 'file_storage',
-  connectionUri: '',
+  connectionHost: '',
+  databaseName: '',
+  errorMessage: null,
 };
 
-// Path for fallback file storage so data persists across dev restarts even without MongoDB
+// Storage directory for persistent fallback
 const STORAGE_DIR = path.resolve(process.cwd(), '.data');
 const STORAGE_FILE = path.join(STORAGE_DIR, 'tasks.json');
 
-const INITIAL_SEED_TASKS: ITask[] = [
+const INITIAL_SEED_TASKS = [
   {
     id: 'task-seed-1',
-    title: 'Initialize MongoDB Schema & Models',
-    description: 'Set up Mongoose schemas with validation, indexes, and timestamps for Task entities.',
+    title: 'Initialize MySQL Schema & Tables',
+    description: 'Set up relational tables with indexing on status, priority, and dates.',
     priority: 'High',
     status: 'Completed',
     dueDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
@@ -35,8 +29,8 @@ const INITIAL_SEED_TASKS: ITask[] = [
   },
   {
     id: 'task-seed-2',
-    title: 'Build REST API with Express and Controllers',
-    description: 'Create CRUD endpoints for tasks, error handling middleware, and status query filters.',
+    title: 'Build Express MySQL Connection Pool',
+    description: 'Configure mysql2 connection pool with parameterized query execution.',
     priority: 'High',
     status: 'In Progress',
     dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -85,8 +79,7 @@ const INITIAL_SEED_TASKS: ITask[] = [
   },
 ];
 
-// Helper to load file tasks
-export function readFallbackStorage(): ITask[] {
+export function readFallbackStorage() {
   try {
     if (!fs.existsSync(STORAGE_DIR)) {
       fs.mkdirSync(STORAGE_DIR, { recursive: true });
@@ -99,13 +92,12 @@ export function readFallbackStorage(): ITask[] {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : INITIAL_SEED_TASKS;
   } catch (err) {
-    console.error('Error reading fallback storage, using in-memory defaults:', err);
+    console.error('Error reading fallback storage, using default seeds:', err);
     return INITIAL_SEED_TASKS;
   }
 }
 
-// Helper to write file tasks
-export function writeFallbackStorage(tasks: ITask[]): void {
+export function writeFallbackStorage(tasks) {
   try {
     if (!fs.existsSync(STORAGE_DIR)) {
       fs.mkdirSync(STORAGE_DIR, { recursive: true });
@@ -117,47 +109,91 @@ export function writeFallbackStorage(tasks: ITask[]): void {
 }
 
 /**
- * Connect to MongoDB or initialize resilient fallback storage
+ * Initialize MySQL Connection Pool and Auto-Create Tasks Table
  */
-export async function connectDB(): Promise<DbStatus> {
-  const uri = process.env.MONGODB_URI?.trim();
+export async function connectDB() {
+  const mysqlUrl = process.env.MYSQL_URL || process.env.DATABASE_URL;
+  const host = process.env.MYSQL_HOST;
+  const user = process.env.MYSQL_USER;
+  const password = process.env.MYSQL_PASSWORD;
+  const database = process.env.MYSQL_DATABASE || 'taskflow';
+  const port = parseInt(process.env.MYSQL_PORT || '3306', 10);
 
-  if (!uri) {
-    console.log('ℹ️ MONGODB_URI not provided. Running in resilient persistent storage mode.');
-    dbState.isConnectedToMongo = false;
+  // If no MySQL configuration is provided at all
+  if (!mysqlUrl && !host) {
+    console.log('ℹ️ MySQL configuration not found in environment. Running with local persistent storage.');
+    dbState.isConnectedToMySQL = false;
     dbState.engine = 'file_storage';
-    dbState.connectionUri = 'Local Persistent Storage (.data/tasks.json)';
-    readFallbackStorage(); // Ensure seed exists
+    dbState.connectionHost = 'Local Persistent Storage (.data/tasks.json)';
+    readFallbackStorage();
     return dbState;
   }
 
   try {
-    console.log(`Connecting to MongoDB...`);
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-    });
+    console.log(`Connecting to MySQL database...`);
+    const poolConfig = mysqlUrl
+      ? { uri: mysqlUrl, waitForConnections: true, connectionLimit: 10, queueLimit: 0, connectTimeout: 5000 }
+      : {
+          host: host || 'localhost',
+          user: user || 'root',
+          password: password || '',
+          database,
+          port,
+          waitForConnections: true,
+          connectionLimit: 10,
+          queueLimit: 0,
+          connectTimeout: 5000,
+        };
 
-    dbState.isConnectedToMongo = true;
-    dbState.engine = 'mongodb';
-    dbState.connectionUri = uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'); // Redact credentials
-    dbState.databaseName = conn.connection.name;
-    dbState.lastConnectedAt = new Date().toISOString();
-    delete dbState.errorMessage;
+    pool = mysql.createPool(poolConfig);
 
-    console.log(`MongoDB Connected: ${conn.connection.host} / ${conn.connection.name}`);
+    // Test connection with a quick query
+    const [rows] = await pool.query('SELECT 1 as connected');
+
+    // Auto-create table if not exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id VARCHAR(64) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        priority ENUM('Low', 'Medium', 'High') DEFAULT 'Medium',
+        status ENUM('Pending', 'In Progress', 'Completed') DEFAULT 'Pending',
+        dueDate DATETIME NULL,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_status (status),
+        INDEX idx_priority (priority),
+        INDEX idx_due_date (dueDate),
+        INDEX idx_created_at (createdAt)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `);
+
+    dbState.isConnectedToMySQL = true;
+    dbState.engine = 'mysql';
+    dbState.connectionHost = host || (mysqlUrl ? 'MySQL Connection URL' : 'localhost:3306');
+    dbState.databaseName = database;
+    dbState.errorMessage = null;
+
+    console.log(`MySQL Connected successfully! Table 'tasks' is ready.`);
     return dbState;
-  } catch (error: any) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    console.log('⚠️ Falling back to persistent local storage so the application stays operational.');
-    dbState.isConnectedToMongo = false;
+  } catch (error) {
+    console.error(`MySQL Connection Error: ${error.message}`);
+    console.log('⚠️ Falling back to persistent local storage so the application remains operational.');
+    dbState.isConnectedToMySQL = false;
     dbState.engine = 'file_storage';
-    dbState.connectionUri = 'Local Persistent Storage (MongoDB offline)';
+    dbState.connectionHost = 'Local Persistent Storage (MySQL offline)';
     dbState.errorMessage = error.message;
     readFallbackStorage();
     return dbState;
   }
 }
 
-export function getDbStatus(): DbStatus {
+export function getDbStatus() {
   return { ...dbState };
 }
+
+export function getMySQLPool() {
+  return pool;
+}
+
+export default connectDB;

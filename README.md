@@ -1,6 +1,6 @@
-# TaskFlow - Full-Stack MERN Task Management Application
+# TaskFlow - Full-Stack MySQL Task Management Application
 
-A complete, production-ready **Task Management Web Application** built using the MERN stack (MongoDB, Express.js, React, Node.js) with Vite, Tailwind CSS v4, Lucide icons, and Axios.
+A complete, production-ready **Task Management Web Application** built with **MySQL**, **Express.js**, **React**, and **Node.js** using Vite, Tailwind CSS v4, Lucide icons, and Axios.
 
 ---
 
@@ -20,16 +20,17 @@ A complete, production-ready **Task Management Web Application** built using the
   - **One-Click Complete**: Interactive status toggling with optimistic feedback.
 
 - **Search, Filter & Sort**:
-  - Live text search across title and description.
+  - Live text search across title and description (`LIKE ?` in MySQL).
   - Filter by status (`All`, `Pending`, `In Progress`, `Completed`).
   - Filter by priority (`All`, `Low`, `Medium`, `High`).
   - Sort by Creation Date, Due Date, Priority, or Title (ascending & descending).
   - Reset filters shortcut and empty states.
 
-- **Resilient Full-Stack Architecture**:
-  - Full REST API with Express controllers and error handling middleware.
-  - Mongoose schema with field validation, indexes, and timestamps.
-  - Dual database engine: Connects automatically to **MongoDB Atlas** or **local MongoDB** when `MONGODB_URI` is provided; seamlessly falls back to a persistent JSON storage engine if MongoDB is offline or unconfigured.
+- **MySQL Database Architecture**:
+  - Direct connection pooling with `mysql2/promise`.
+  - Auto-creates the `tasks` relational table on startup with indexing on status, priority, and due dates.
+  - Includes `backend/schema.sql` for quick manual table importing or provisioning on MySQL / AWS RDS / PlanetScale / Aiven / Google Cloud SQL.
+  - Resilient local fallback engine if MySQL credentials are not provided, ensuring zero-crash uptime in sandboxes.
 
 ---
 
@@ -39,122 +40,103 @@ A complete, production-ready **Task Management Web Application** built using the
 task-management-app/
 ├── backend/
 │   ├── config/
-│   │   └── db.ts                # MongoDB Mongoose connector & resilient fallback
+│   │   └── db.js                # MySQL mysql2 connection pool & auto-table migration
 │   ├── controllers/
-│   │   └── taskController.ts    # REST API CRUD & stats logic
+│   │   └── taskController.js    # Parameterized SQL CRUD queries & aggregation
 │   ├── models/
-│   │   └── Task.ts              # Mongoose schema, validation & TypeScript types
+│   │   └── Task.js              # Validation & row formatting
 │   ├── routes/
-│   │   └── taskRoutes.ts        # Express REST API endpoints
-│   └── middleware/
-│       └── errorMiddleware.ts   # 404 handler & error response serializer
+│   │   └── taskRoutes.js        # Express REST API endpoints
+│   ├── middleware/
+│   │   └── errorMiddleware.js   # 404 handler & error response serializer
+│   └── schema.sql               # MySQL DDL table definition & starter seeds
 │
 ├── src/
 │   ├── components/
-│   │   ├── Navbar.tsx           # Top navigation bar (Top Bar Contract)
-│   │   ├── Sidebar.tsx          # Navigation sidebar with status counters
-│   │   ├── StatCard.tsx         # KPI metric card with tabular figures
-│   │   ├── TaskCard.tsx         # Card view with unboxed metadata
-│   │   ├── TaskTableRow.tsx     # High-density table row view
-│   │   ├── TaskForm.tsx         # Create / Edit modal with validation
-│   │   ├── TaskFilters.tsx      # Search, filter, and sort controls
-│   │   ├── TaskList.tsx         # Grid/Table container with skeletons & empty states
-│   │   ├── DeleteConfirmModal.tsx # In-app confirmation dialog
-│   │   ├── DatabaseStatusModal.tsx# Database status & reseeding modal
-│   │   └── Toast.tsx            # Floating action notification toasts
+│   │   ├── Navbar.jsx           # Top navigation bar
+│   │   ├── Sidebar.jsx          # Navigation sidebar with status counters
+│   │   ├── StatCard.jsx         # KPI metric card with tabular figures
+│   │   ├── TaskCard.jsx         # Card view with unboxed metadata
+│   │   ├── TaskTableRow.jsx     # High-density table row view
+│   │   ├── TaskForm.jsx         # Create / Edit modal with validation
+│   │   ├── TaskFilters.jsx      # Search, filter, and sort controls
+│   │   ├── TaskList.jsx         # Grid/Table container with skeletons & empty states
+│   │   ├── DeleteConfirmModal.jsx # In-app confirmation dialog
+│   │   ├── DatabaseStatusModal.jsx# Database status & reseeding modal
+│   │   └── Toast.jsx            # Floating action notification toasts
 │   ├── pages/
-│   │   ├── Dashboard.tsx        # High-level metrics & recent tasks
-│   │   └── TasksPage.tsx        # Full task list management
+│   │   ├── Dashboard.jsx        # High-level metrics & recent tasks
+│   │   └── Tasks.jsx            # Full task list management
 │   ├── services/
-│   │   └── taskService.ts       # Axios client for REST API endpoints
-│   ├── types/
-│   │   └── task.ts              # Frontend TypeScript definitions
-│   ├── App.tsx                  # Root application layout
-│   ├── main.tsx                 # React DOM bootstrap
+│   │   └── taskService.js       # Axios client for REST API endpoints
+│   ├── App.jsx                  # Root application layout
+│   ├── main.jsx                 # React DOM bootstrap
 │   └── index.css                # Tailwind CSS v4 theme & base styles
 │
-├── server.ts                    # Express server mounting API & Vite middlewares
+├── server.js                    # Express server mounting API & Vite middlewares
 ├── .env.example                 # Environment variables specification
 └── package.json                 # Dependencies and scripts
 ```
 
 ---
 
-## 3. REST API Specification
+## 3. MySQL Database Setup
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/tasks` | Retrieve all tasks (supports `?status=`, `?priority=`, `?search=`, `?sortBy=`, `?sortOrder=`) |
-| `GET` | `/api/tasks/stats` | Retrieve aggregated dashboard counts, completion rates, and priority counts |
-| `GET` | `/api/tasks/:id` | Retrieve single task by ID |
-| `POST` | `/api/tasks` | Create a new task (`title`, `description`, `priority`, `status`, `dueDate`) |
-| `PUT` | `/api/tasks/:id` | Update task details |
-| `PATCH` | `/api/tasks/:id/status` | Fast update of task status (`Pending` / `In Progress` / `Completed`) |
-| `DELETE` | `/api/tasks/:id` | Permanently delete a task |
-| `POST` | `/api/tasks/seed-demo` | Restore initial starter tasks dataset |
-| `GET` | `/api/health` | Server and database status health check |
-
----
-
-## 4. Setup and Installation
-
-### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-
-### Step 1: Install Dependencies
+### Step 1: Create Database & Tables (Optional — Auto-Created by Default)
+You can run the schema file against your MySQL instance:
 ```bash
-npm install
+mysql -u root -p < backend/schema.sql
 ```
 
 ### Step 2: Configure Environment Variables
-Copy the `.env.example` file to `.env`:
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-To connect **MongoDB Atlas** (Cloud):
-1. Sign up or log into [MongoDB Atlas](https://www.mongodb.com/atlas).
-2. Create a free cluster and a database user.
-3. In Network Access, whitelist your IP address (or `0.0.0.0/0` for cloud deployment).
-4. Copy the connection string and paste it into `.env`:
-   ```env
-   MONGODB_URI="mongodb+srv://<username>:<password>@cluster0.mongodb.net/taskflow?retryWrites=true&w=majority"
-   ```
+Set your connection parameters:
+```env
+# Option 1: URL format
+MYSQL_URL="mysql://root:password@localhost:3306/taskflow"
 
-*Note: If `MONGODB_URI` is left blank, the application automatically uses the resilient local file storage in `.data/tasks.json`.*
-
-### Step 3: Run Development Server
-```bash
-npm run dev
+# Option 2: Parameter format
+MYSQL_HOST="localhost"
+MYSQL_PORT=3306
+MYSQL_USER="root"
+MYSQL_PASSWORD="your_password"
+MYSQL_DATABASE="taskflow"
 ```
-The server will start at `http://localhost:3000`.
 
-### Step 4: Build for Production
-```bash
-npm run build
-npm start
-```
+*Note: If MySQL parameters are not provided, the app will run with local fallback storage so you can test immediately without any downtime.*
 
 ---
 
-## 5. Testing API Endpoints
+## 4. REST API Specification
 
-You can test backend endpoints using `curl` or Postman:
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/tasks` | Retrieve tasks with SQL `WHERE` filtering & sorting |
+| `GET` | `/api/tasks/stats` | Retrieve aggregate counts with SQL `SUM/COUNT` |
+| `GET` | `/api/tasks/:id` | Retrieve single task (`SELECT * FROM tasks WHERE id = ?`) |
+| `POST` | `/api/tasks` | Insert new task (`INSERT INTO tasks ...`) |
+| `PUT` | `/api/tasks/:id` | Update task (`UPDATE tasks SET ... WHERE id = ?`) |
+| `PATCH` | `/api/tasks/:id/status` | Update task status (`UPDATE tasks SET status = ? WHERE id = ?`) |
+| `DELETE` | `/api/tasks/:id` | Delete task (`DELETE FROM tasks WHERE id = ?`) |
+| `POST` | `/api/tasks/seed-demo` | Restore sample tasks dataset |
+| `GET` | `/api/health` | Health check reporting MySQL engine status |
 
-- **Get all tasks**:
-  ```bash
-  curl http://localhost:3000/api/tasks
-  ```
-- **Create a task**:
-  ```bash
-  curl -X POST http://localhost:3000/api/tasks \
-    -H "Content-Type: application/json" \
-    -d '{"title":"Implement Auth","priority":"High","status":"Pending"}'
-  ```
-- **Update status**:
-  ```bash
-  curl -X PATCH http://localhost:3000/api/tasks/<TASK_ID>/status \
-    -H "Content-Type: application/json" \
-    -d '{"status":"Completed"}'
-  ```
+---
+
+## 5. Running the Application
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+npm start
+```

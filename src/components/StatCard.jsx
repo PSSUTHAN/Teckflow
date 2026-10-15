@@ -1,17 +1,6 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  subtitle?: string;
-  icon: LucideIcon;
-  variant?: 'blue' | 'amber' | 'emerald' | 'rose' | 'slate';
-  onClick?: () => void;
-  active?: boolean;
-}
-
-export const StatCard: React.FC<StatCardProps> = ({
+export const StatCard = ({
   label,
   value,
   subtitle,
@@ -51,7 +40,12 @@ export const StatCard: React.FC<StatCardProps> = ({
       iconBg: 'bg-slate-200 text-slate-700',
       activeBorder: 'border-slate-500 ring-1 ring-slate-500',
     },
-  }[variant];
+  }[variant] || {
+    accent: 'text-blue-600',
+    bg: 'bg-blue-50/50',
+    iconBg: 'bg-blue-100 text-blue-700',
+    activeBorder: 'border-blue-500 ring-1 ring-blue-500',
+  };
 
   return (
     <div
@@ -66,7 +60,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             {label}
           </p>
           <p className="text-3xl font-bold tracking-tight text-slate-900 font-mono tabular-nums">
-            {value.toLocaleString()}
+            {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
           {subtitle && (
             <p className="text-xs text-slate-500 mt-1.5 flex items-center gap-1.5">
@@ -74,10 +68,14 @@ export const StatCard: React.FC<StatCardProps> = ({
             </p>
           )}
         </div>
-        <div className={`p-2.5 rounded-lg ${variantStyles.iconBg} shrink-0`}>
-          <Icon className="w-5 h-5" />
-        </div>
+        {Icon && (
+          <div className={`p-2.5 rounded-lg ${variantStyles.iconBg} shrink-0`}>
+            <Icon className="w-5 h-5" />
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+export default StatCard;

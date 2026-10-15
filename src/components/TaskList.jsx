@@ -1,22 +1,9 @@
 import React from 'react';
-import { ClipboardList, Plus, SearchX, CheckCircle2 } from 'lucide-react';
-import { Task } from '../types/task';
-import { TaskCard } from './TaskCard';
-import { TaskTableRow } from './TaskTableRow';
+import { ClipboardList, Plus, SearchX } from 'lucide-react';
+import { TaskCard } from './TaskCard.jsx';
+import { TaskTableRow } from './TaskTableRow.jsx';
 
-interface TaskListProps {
-  tasks: Task[];
-  isLoading: boolean;
-  viewMode: 'grid' | 'table';
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
-  onToggleStatus: (task: Task) => void;
-  onCreateNew: () => void;
-  onResetFilters: () => void;
-  isFiltered: boolean;
-}
-
-export const TaskList: React.FC<TaskListProps> = ({
+export const TaskList = ({
   tasks,
   isLoading,
   viewMode,
@@ -27,7 +14,6 @@ export const TaskList: React.FC<TaskListProps> = ({
   onResetFilters,
   isFiltered,
 }) => {
-  // Loading skeleton state
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -54,7 +40,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     );
   }
 
-  // Empty state when filtered out
   if (tasks.length === 0 && isFiltered) {
     return (
       <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto my-6 shadow-xs">
@@ -78,7 +63,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     );
   }
 
-  // Zero-tasks empty state
   if (tasks.length === 0) {
     return (
       <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center max-w-md mx-auto my-6 shadow-xs">
@@ -103,7 +87,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     );
   }
 
-  // Table View Mode
   if (viewMode === 'table') {
     return (
       <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-xs">
@@ -136,7 +119,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     );
   }
 
-  // Grid View Mode
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {tasks.map((task) => (
@@ -151,3 +133,5 @@ export const TaskList: React.FC<TaskListProps> = ({
     </div>
   );
 };
+
+export default TaskList;

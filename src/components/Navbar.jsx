@@ -1,17 +1,7 @@
 import React from 'react';
 import { CheckSquare, Plus, Menu, X, Database } from 'lucide-react';
 
-interface NavbarProps {
-  currentTab: 'dashboard' | 'tasks';
-  onSelectTab: (tab: 'dashboard' | 'tasks') => void;
-  onOpenCreateModal: () => void;
-  onOpenDbModal: () => void;
-  onToggleMobileSidebar: () => void;
-  isMobileSidebarOpen: boolean;
-  dbEngine?: 'mongodb' | 'file_storage';
-}
-
-export const Navbar: React.FC<NavbarProps> = ({
+export const Navbar = ({
   currentTab,
   onSelectTab,
   onOpenCreateModal,
@@ -48,7 +38,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
         </div>
 
-        {/* Zone 2: Navigation Links (single-line, concise) */}
+        {/* Zone 2: Navigation Links */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <button
             type="button"
@@ -84,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Database className="w-3.5 h-3.5 text-slate-500" />
             <span className="hidden sm:inline">
-              {dbEngine === 'mongodb' ? 'MongoDB' : 'Storage Engine'}
+              {dbEngine === 'mysql' ? 'MySQL' : 'Storage Engine'}
             </span>
           </button>
 
@@ -101,3 +91,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
+export default Navbar;

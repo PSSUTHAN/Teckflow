@@ -1,10 +1,10 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import taskRoutes from './backend/routes/taskRoutes.js';
-import { connectDB, getDbStatus, writeFallbackStorage, readFallbackStorage } from './backend/config/db.js';
+import { connectDB, getDbStatus, writeFallbackStorage } from './backend/config/db.js';
 import { errorHandler, notFound } from './backend/middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -33,8 +33,8 @@ async function startServer() {
   // REST API Routes
   app.use('/api/tasks', taskRoutes);
 
-  // Database status and health check
-  app.get('/api/health', (_req: Request, res: Response) => {
+  // Health check endpoint
+  app.get('/api/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -43,7 +43,7 @@ async function startServer() {
   });
 
   // Database status endpoint
-  app.get('/api/db-status', (_req: Request, res: Response) => {
+  app.get('/api/db-status', (_req, res) => {
     res.status(200).json({
       success: true,
       data: getDbStatus(),
@@ -51,7 +51,7 @@ async function startServer() {
   });
 
   // Reset / Re-seed sample data endpoint
-  app.post('/api/tasks/seed-demo', (_req: Request, res: Response) => {
+  app.post('/api/tasks/seed-demo', (_req, res) => {
     try {
       const defaultTasks = [
         {
@@ -115,9 +115,9 @@ async function startServer() {
           updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         },
       ];
-      writeFallbackStorage(defaultTasks as any);
+      writeFallbackStorage(defaultTasks);
       res.status(200).json({ success: true, message: 'Sample tasks reseeded successfully' });
-    } catch (err: any) {
+    } catch (err) {
       res.status(500).json({ success: false, message: err.message });
     }
   });
@@ -131,15 +131,14 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // In production, serve the built static assets from dist
     const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req: Request, res: Response) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  // Error middleware for API
+  // Error middleware
   app.use('/api', notFound);
   app.use(errorHandler);
 

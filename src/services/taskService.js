@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { Task, TaskFormData, TaskPriority, TaskStatus, TaskStats } from '../types/task';
 
-// Setup Axios client with environment base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const apiClient = axios.create({
@@ -12,21 +10,13 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
-export interface TaskQueryParams {
-  status?: string;
-  priority?: string;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
 export const taskService = {
   /**
    * Fetch all tasks with optional filtering and sorting
    */
-  async getTasks(params?: TaskQueryParams): Promise<Task[]> {
+  async getTasks(params) {
     const response = await apiClient.get('/tasks', { params });
-    return response.data.data.map((task: any) => ({
+    return response.data.data.map((task) => ({
       ...task,
       id: task._id || task.id,
     }));
@@ -35,7 +25,7 @@ export const taskService = {
   /**
    * Fetch aggregate dashboard stats
    */
-  async getStats(): Promise<TaskStats> {
+  async getStats() {
     const response = await apiClient.get('/tasks/stats');
     return response.data.data;
   },
@@ -43,7 +33,7 @@ export const taskService = {
   /**
    * Fetch single task by ID
    */
-  async getTaskById(id: string): Promise<Task> {
+  async getTaskById(id) {
     const response = await apiClient.get(`/tasks/${id}`);
     const task = response.data.data;
     return {
@@ -55,7 +45,7 @@ export const taskService = {
   /**
    * Create a new task
    */
-  async createTask(data: TaskFormData): Promise<Task> {
+  async createTask(data) {
     const payload = {
       title: data.title,
       description: data.description || '',
@@ -74,8 +64,8 @@ export const taskService = {
   /**
    * Update an existing task
    */
-  async updateTask(id: string, data: Partial<TaskFormData>): Promise<Task> {
-    const payload: any = {};
+  async updateTask(id, data) {
+    const payload = {};
     if (data.title !== undefined) payload.title = data.title;
     if (data.description !== undefined) payload.description = data.description;
     if (data.priority !== undefined) payload.priority = data.priority;
@@ -95,7 +85,7 @@ export const taskService = {
   /**
    * Update task status (Pending <-> In Progress <-> Completed)
    */
-  async updateTaskStatus(id: string, status: TaskStatus): Promise<Task> {
+  async updateTaskStatus(id, status) {
     const response = await apiClient.patch(`/tasks/${id}/status`, { status });
     const task = response.data.data;
     return {
@@ -107,22 +97,24 @@ export const taskService = {
   /**
    * Delete a task
    */
-  async deleteTask(id: string): Promise<void> {
+  async deleteTask(id) {
     await apiClient.delete(`/tasks/${id}`);
   },
 
   /**
    * Re-seed sample starter tasks
    */
-  async seedDemoTasks(): Promise<void> {
+  async seedDemoTasks() {
     await apiClient.post('/tasks/seed-demo');
   },
 
   /**
    * Fetch database health & connection status
    */
-  async getDbStatus(): Promise<any> {
+  async getDbStatus() {
     const response = await apiClient.get('/db-status');
     return response.data.data;
   },
 };
+
+export default taskService;

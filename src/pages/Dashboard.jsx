@@ -5,27 +5,13 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
-  TrendingUp,
   Plus,
-  Calendar,
   Layers,
 } from 'lucide-react';
-import { Task, TaskStats } from '../types/task';
-import { StatCard } from '../components/StatCard';
-import { TaskCard } from '../components/TaskCard';
+import { StatCard } from '../components/StatCard.jsx';
+import { TaskCard } from '../components/TaskCard.jsx';
 
-interface DashboardProps {
-  stats: TaskStats | null;
-  recentTasks: Task[];
-  isLoading: boolean;
-  onNavigateToTasks: (statusFilter?: string) => void;
-  onOpenCreateModal: () => void;
-  onEditTask: (task: Task) => void;
-  onDeleteTask: (task: Task) => void;
-  onToggleStatus: (task: Task) => void;
-}
-
-export const Dashboard: React.FC<DashboardProps> = ({
+export const Dashboard = ({
   stats,
   recentTasks,
   isLoading,
@@ -67,7 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Overdue Warning Callout if overdue tasks exist */}
+      {/* Overdue Warning Callout */}
       {overdue > 0 && (
         <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -322,3 +308,5 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
+
+export default Dashboard;

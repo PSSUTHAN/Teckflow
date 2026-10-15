@@ -1,28 +1,13 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  CheckCircle2,
-  Clock,
   ListTodo,
   AlertCircle,
-  FolderDot,
   Database,
   PlusCircle,
 } from 'lucide-react';
-import { TaskStats } from '../types/task';
 
-interface SidebarProps {
-  currentTab: 'dashboard' | 'tasks';
-  onSelectTab: (tab: 'dashboard' | 'tasks') => void;
-  onSelectFilterShortcut: (status: string) => void;
-  stats: TaskStats | null;
-  onOpenCreateModal: () => void;
-  onOpenDbModal: () => void;
-  isMobileOpen: boolean;
-  onCloseMobile: () => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar = ({
   currentTab,
   onSelectTab,
   onSelectFilterShortcut,
@@ -220,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="truncate">Database Details</span>
           </div>
           <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
-            {stats?.dbStatus?.engine === 'mongodb' ? 'Mongo' : 'Local'}
+            {stats?.dbStatus?.engine === 'mysql' ? 'MySQL' : 'Local'}
           </span>
         </button>
       </div>
@@ -249,3 +234,5 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </>
   );
 };
+
+export default Sidebar;

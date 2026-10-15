@@ -1,15 +1,7 @@
 import React from 'react';
-import { Search, X, SlidersHorizontal, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
-import { TaskFilterState } from '../types/task';
+import { Search, X, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
 
-interface TaskFiltersProps {
-  filters: TaskFilterState;
-  onFilterChange: (filters: TaskFilterState) => void;
-  onResetFilters: () => void;
-  totalFilteredCount: number;
-}
-
-export const TaskFilters: React.FC<TaskFiltersProps> = ({
+export const TaskFilters = ({
   filters,
   onFilterChange,
   onResetFilters,
@@ -55,10 +47,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
             <select
               value={`${filters.sortBy}-${filters.sortOrder}`}
               onChange={(e) => {
-                const [sortBy, sortOrder] = e.target.value.split('-') as [
-                  TaskFilterState['sortBy'],
-                  TaskFilterState['sortOrder']
-                ];
+                const [sortBy, sortOrder] = e.target.value.split('-');
                 onFilterChange({ ...filters, sortBy, sortOrder });
               }}
               className="text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 pr-7 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none cursor-pointer"
@@ -172,3 +161,5 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
     </div>
   );
 };
+
+export default TaskFilters;

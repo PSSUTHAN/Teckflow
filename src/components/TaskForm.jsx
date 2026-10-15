@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, AlertTriangle, Loader2 } from 'lucide-react';
-import { Task, TaskFormData, TaskPriority, TaskStatus } from '../types/task';
+import { X, AlertTriangle, Loader2 } from 'lucide-react';
 
-interface TaskFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: TaskFormData) => Promise<void>;
-  initialTask?: Task | null;
-}
-
-export const TaskForm: React.FC<TaskFormProps> = ({
+export const TaskForm = ({
   isOpen,
   onClose,
   onSubmit,
   initialTask,
 }) => {
-  const [formData, setFormData] = useState<TaskFormData>({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'Medium',
@@ -23,10 +15,9 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     dueDate: '',
   });
 
-  const [titleError, setTitleError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sync form when initialTask changes or modal opens
   useEffect(() => {
     if (initialTask) {
       let formattedDate = '';
@@ -40,8 +31,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
       setFormData({
         title: initialTask.title,
         description: initialTask.description || '',
-        priority: initialTask.priority,
-        status: initialTask.status,
+        priority: initialTask.priority || 'Medium',
+        status: initialTask.status || 'Pending',
         dueDate: formattedDate,
       });
     } else {
@@ -56,9 +47,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     setTitleError(null);
   }, [initialTask, isOpen]);
 
-  // Handle escape key
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen && !isSubmitting) {
         onClose();
       }
@@ -69,7 +59,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
@@ -86,7 +76,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         description: formData.description.trim(),
       });
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       setTitleError(err.response?.data?.message || err.message || 'Failed to save task');
     } finally {
       setIsSubmitting(false);
@@ -171,7 +161,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                 Priority
               </label>
               <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
-                {(['Low', 'Medium', 'High'] as TaskPriority[]).map((p) => (
+                {['Low', 'Medium', 'High'].map((p) => (
                   <button
                     key={p}
                     type="button"
@@ -194,7 +184,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                 Status
               </label>
               <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-lg border border-slate-200">
-                {(['Pending', 'In Progress', 'Completed'] as TaskStatus[]).map((s) => (
+                {['Pending', 'In Progress', 'Completed'].map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -263,3 +253,5 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     </div>
   );
 };
+
+export default TaskForm;

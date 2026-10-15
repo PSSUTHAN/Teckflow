@@ -1,22 +1,9 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { Task, TaskFilterState } from '../types/task';
-import { TaskFilters } from '../components/TaskFilters';
-import { TaskList } from '../components/TaskList';
+import { TaskFilters } from '../components/TaskFilters.jsx';
+import { TaskList } from '../components/TaskList.jsx';
 
-interface TasksPageProps {
-  tasks: Task[];
-  isLoading: boolean;
-  filters: TaskFilterState;
-  onFilterChange: (filters: TaskFilterState) => void;
-  onResetFilters: () => void;
-  onOpenCreateModal: () => void;
-  onEditTask: (task: Task) => void;
-  onDeleteTask: (task: Task) => void;
-  onToggleStatus: (task: Task) => void;
-}
-
-export const TasksPage: React.FC<TasksPageProps> = ({
+export const Tasks = ({
   tasks,
   isLoading,
   filters,
@@ -78,3 +65,5 @@ export const TasksPage: React.FC<TasksPageProps> = ({
     </div>
   );
 };
+
+export default Tasks;

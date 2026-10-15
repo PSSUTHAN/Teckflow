@@ -1,13 +1,7 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
-import { ToastMessage } from '../types/task';
 
-interface ToastContainerProps {
-  toasts: ToastMessage[];
-  onDismiss: (id: string) => void;
-}
-
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismiss }) => {
+export const ToastContainer = ({ toasts, onDismiss }) => {
   if (toasts.length === 0) return null;
 
   return (
@@ -48,3 +42,5 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onDismis
     </div>
   );
 };
+
+export default ToastContainer;

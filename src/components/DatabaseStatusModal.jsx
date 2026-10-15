@@ -1,20 +1,8 @@
 import React, { useState } from 'react';
-import { Database, CheckCircle, AlertCircle, RefreshCw, X, Server, Copy, Check } from 'lucide-react';
-import { taskService } from '../services/taskService';
+import { Database, CheckCircle, RefreshCw, X, Server, Copy, Check } from 'lucide-react';
+import { taskService } from '../services/taskService.js';
 
-interface DatabaseStatusModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  dbStatus?: {
-    isConnectedToMongo: boolean;
-    engine: 'mongodb' | 'file_storage';
-    connectionUri: string;
-    databaseName?: string;
-  };
-  onReseedCompleted: () => void;
-}
-
-export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
+export const DatabaseStatusModal = ({
   isOpen,
   onClose,
   dbStatus,
@@ -26,7 +14,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isMongo = dbStatus?.isConnectedToMongo;
+  const isMySQL = dbStatus?.isConnectedToMySQL;
 
   const handleReseed = async () => {
     try {
@@ -43,7 +31,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
   };
 
   const handleCopyEnv = () => {
-    navigator.clipboard.writeText('MONGODB_URI="mongodb+srv://<username>:<password>@cluster0.mongodb.net/taskflow?retryWrites=true&w=majority"');
+    navigator.clipboard.writeText('MYSQL_URL="mysql://root:password@localhost:3306/taskflow"');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -59,7 +47,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
           <div className="flex items-center gap-2.5">
             <Database className="w-5 h-5 text-blue-600" />
             <h2 className="text-base font-semibold text-slate-900">
-              Database & Architecture Info
+              Database & MySQL Status
             </h2>
           </div>
           <button
@@ -80,40 +68,40 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
               </span>
               <span
                 className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                  isMongo ? 'text-emerald-700' : 'text-blue-700'
+                  isMySQL ? 'text-emerald-700' : 'text-blue-700'
                 }`}
               >
-                {isMongo ? (
+                {isMySQL ? (
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
                 ) : (
                   <Server className="w-4 h-4 text-blue-600" />
                 )}
-                {isMongo ? 'MongoDB Connected' : 'Resilient Persistent Storage'}
+                {isMySQL ? 'MySQL Database Connected' : 'Resilient Persistent Storage'}
               </span>
             </div>
 
             <p className="text-sm font-mono text-slate-700 break-all bg-white p-2.5 rounded-lg border border-slate-200 text-xs">
-              {dbStatus?.connectionUri || 'Local Persistent Storage (.data/tasks.json)'}
+              {dbStatus?.connectionHost || 'Local Persistent Storage (.data/tasks.json)'}
             </p>
 
             <p className="text-xs text-slate-500 mt-2.5 leading-relaxed">
-              {isMongo
-                ? `Connected to database: ${dbStatus?.databaseName || 'taskflow'}`
-                : 'All CRUD operations persist safely to local storage on the server. To connect MongoDB Atlas, provide MONGODB_URI in your environment.'}
+              {isMySQL
+                ? `Connected to MySQL database: ${dbStatus?.databaseName || 'taskflow'}`
+                : 'All CRUD operations persist safely on the server. To connect an external or local MySQL database, configure MYSQL_URL or MYSQL_HOST in your environment.'}
             </p>
           </div>
 
-          {/* MongoDB Connection Helper */}
+          {/* MySQL Connection Helper */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
-              Connecting MongoDB Atlas (Optional)
+              MySQL Connection Configuration
             </label>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Add your connection string in the Secrets or <code className="text-blue-700 font-mono">.env</code>:
+              Configure in your <code className="text-blue-700 font-mono">.env</code> or host environment:
             </p>
             <div className="flex items-center gap-2 bg-slate-900 text-slate-100 p-2.5 rounded-lg text-xs font-mono">
               <span className="truncate flex-1">
-                MONGODB_URI="mongodb+srv://..."
+                MYSQL_URL="mysql://root:password@localhost:3306/taskflow"
               </span>
               <button
                 type="button"
@@ -124,13 +112,16 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
+            <p className="text-[11px] text-slate-500">
+              The table <code className="font-mono text-slate-700">tasks</code> is auto-created on connection with indexing on status and priority.
+            </p>
           </div>
 
           {/* Seed / Reset Actions */}
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-900">Demo Dataset</p>
-              <p className="text-xs text-slate-500">Restore default demo tasks with various priorities</p>
+              <p className="text-xs text-slate-500">Restore default starter tasks</p>
             </div>
             <button
               type="button"
@@ -157,3 +148,5 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
     </div>
   );
 };
+
+export default DatabaseStatusModal;

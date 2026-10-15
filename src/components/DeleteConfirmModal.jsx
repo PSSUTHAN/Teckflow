@@ -1,16 +1,7 @@
 import React from 'react';
-import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
-import { Task } from '../types/task';
+import { AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 
-interface DeleteConfirmModalProps {
-  isOpen: boolean;
-  task: Task | null;
-  onClose: () => void;
-  onConfirm: () => Promise<void>;
-  isDeleting: boolean;
-}
-
-export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+export const DeleteConfirmModal = ({
   isOpen,
   task,
   onClose,
@@ -69,3 +60,5 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
     </div>
   );
 };
+
+export default DeleteConfirmModal;
