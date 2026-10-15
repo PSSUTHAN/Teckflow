@@ -1,0 +1,62 @@
+[
+  {
+    "id": "task-seed-1",
+    "title": "Initialize MongoDB Schema & Models",
+    "description": "Set up Mongoose schemas with validation, indexes, and timestamps for Task entities.",
+    "priority": "High",
+    "status": "Completed",
+    "dueDate": "2026-10-14T09:01:26.502Z",
+    "createdAt": "2026-10-12T09:01:26.503Z",
+    "updatedAt": "2026-10-14T09:01:26.503Z"
+  },
+  {
+    "id": "task-seed-2",
+    "title": "Build REST API with Express and Controllers",
+    "description": "Create CRUD endpoints for tasks, error handling middleware, and status query filters.",
+    "priority": "High",
+    "status": "In Progress",
+    "dueDate": "2026-10-17T09:01:26.503Z",
+    "createdAt": "2026-10-13T09:01:26.503Z",
+    "updatedAt": "2026-10-14T21:01:26.503Z"
+  },
+  {
+    "id": "task-seed-3",
+    "title": "Design Responsive Dashboard UI",
+    "description": "Implement KPI stat cards, completion rates, priority distribution, and clean tabular layout.",
+    "priority": "Medium",
+    "status": "In Progress",
+    "dueDate": "2026-10-19T09:01:26.503Z",
+    "createdAt": "2026-10-14T09:01:26.503Z",
+    "updatedAt": "2026-10-15T08:31:26.503Z"
+  },
+  {
+    "id": "task-seed-4",
+    "title": "Conduct End-to-End API and Validation Testing",
+    "description": "Verify status code responses, missing title rejections, sorting algorithms, and filter states.",
+    "priority": "Medium",
+    "status": "Pending",
+    "dueDate": "2026-10-21T09:01:26.503Z",
+    "createdAt": "2026-10-15T03:01:26.503Z",
+    "updatedAt": "2026-10-15T03:01:26.503Z"
+  },
+  {
+    "id": "task-seed-5",
+    "title": "Review Overdue Project Milestones",
+    "description": "Audit tasks past their expected delivery date and adjust resource allocations accordingly.",
+    "priority": "High",
+    "status": "Pending",
+    "dueDate": "2026-10-13T09:01:26.503Z",
+    "createdAt": "2026-10-10T09:01:26.503Z",
+    "updatedAt": "2026-10-13T09:01:26.503Z"
+  },
+  {
+    "id": "task-seed-6",
+    "title": "Prepare Production Deployment Checklist",
+    "description": "Configure environment variables, secure CORS headers, and document connection options.",
+    "priority": "Low",
+    "status": "Pending",
+    "dueDate": "2026-10-25T09:01:26.503Z",
+    "createdAt": "2026-10-15T08:01:26.503Z",
+    "updatedAt": "2026-10-15T08:01:26.503Z"
+  }
+]
