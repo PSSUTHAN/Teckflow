@@ -1,0 +1,282 @@
+# ==============================================================
+# TaskFlow Full-Stack Kubernetes Manifest (All-in-One)
+# Includes: Secret, ConfigMaps, MySQL Deployment/PVC/Service,
+#           and TaskFlow App Deployment/Service
+# ==============================================================
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: taskflow-secret
+  labels:
+    app.kubernetes.io/name: taskflow
+    app.kubernetes.io/part-of: taskflow
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: "root_password"
+  MYSQL_PASSWORD: "taskflow_password"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskflow-config
+  labels:
+    app.kubernetes.io/name: taskflow
+    app.kubernetes.io/part-of: taskflow
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  MYSQL_HOST: "mysql"
+  MYSQL_PORT: "3306"
+  MYSQL_USER: "taskflow"
+  MYSQL_DATABASE: "taskflow"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-script
+  labels:
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/part-of: taskflow
+data:
+  01-schema.sql: |
+    CREATE DATABASE IF NOT EXISTS taskflow;
+    USE taskflow;
+
+    CREATE TABLE IF NOT EXISTS tasks (
+      id VARCHAR(64) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      priority ENUM('Low', 'Medium', 'High') DEFAULT 'Medium',
+      status ENUM('Pending', 'In Progress', 'Completed') DEFAULT 'Pending',
+      dueDate DATETIME NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_status (status),
+      INDEX idx_priority (priority),
+      INDEX idx_due_date (dueDate),
+      INDEX idx_created_at (createdAt)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    INSERT IGNORE INTO tasks (id, title, description, priority, status, dueDate, createdAt, updatedAt) VALUES
+    ('task-seed-1', 'Initialize MySQL Schema & Tables', 'Create relational tasks table with indexing on priority and status.', 'High', 'Completed', NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 1 DAY),
+    ('task-seed-2', 'Build Express MySQL Connection Pool', 'Configure mysql2 connection pool with parameterized query execution.', 'High', 'In Progress', NOW() + INTERVAL 2 DAY, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 12 HOUR),
+    ('task-seed-3', 'Design Responsive Dashboard UI', 'Implement KPI stat cards, completion rates, and priority breakdown.', 'Medium', 'In Progress', NOW() + INTERVAL 4 DAY, NOW() - INTERVAL 1 DAY, NOW() - INTERVAL 30 MINUTE),
+    ('task-seed-4', 'Conduct End-to-End API and Validation Testing', 'Verify status code responses, missing title rejections, and sorting.', 'Medium', 'Pending', NOW() + INTERVAL 6 DAY, NOW() - INTERVAL 6 HOUR, NOW() - INTERVAL 6 HOUR),
+    ('task-seed-5', 'Review Overdue Project Milestones', 'Audit tasks past their expected delivery date and reallocate resources.', 'High', 'Pending', NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 2 DAY),
+    ('task-seed-6', 'Prepare Production Deployment Checklist', 'Configure environment variables and secure database credentials.', 'Low', 'Pending', NOW() + INTERVAL 10 DAY, NOW() - INTERVAL 1 HOUR, NOW() - INTERVAL 1 HOUR);
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  labels:
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/part-of: taskflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/part-of: taskflow
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secret
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_USER
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_DATABASE
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+            - name: mysql-init-script-volume
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1024Mi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -c
+                - "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -c
+                - "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD"
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 5
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+        - name: mysql-init-script-volume
+          configMap:
+            name: mysql-init-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/part-of: taskflow
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mysql
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-app
+  labels:
+    app.kubernetes.io/name: taskflow-app
+    app.kubernetes.io/part-of: taskflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskflow-app
+  template:
+    metadata:
+      labels:
+        app: taskflow-app
+    spec:
+      containers:
+        - name: app
+          image: taskflow:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: NODE_ENV
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: PORT
+            - name: MYSQL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_HOST
+            - name: MYSQL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_PORT
+            - name: MYSQL_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_USER
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: taskflow-config
+                  key: MYSQL_DATABASE
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secret
+                  key: MYSQL_PASSWORD
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-service
+  labels:
+    app.kubernetes.io/name: taskflow-app
+    app.kubernetes.io/part-of: taskflow
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      nodePort: 30080
+  selector:
+    app: taskflow-app
+

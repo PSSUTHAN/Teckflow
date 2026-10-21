@@ -12,7 +12,9 @@
     "docker:build": "docker build -t taskflow .",
     "docker:run": "docker run -p 3000:3000 taskflow",
     "docker:up": "docker compose up -d --build",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "k8s:apply": "kubectl apply -f k8s/",
+    "k8s:delete": "kubectl delete -f k8s/"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

@@ -175,3 +175,50 @@ docker build -t taskflow .
 # Run container
 docker run -p 3000:3000 taskflow
 ```
+
+
+---
+
+## 7. Kubernetes Deployment
+
+The project includes both modular manifests in `k8s/` and a unified [`kubernetes.yaml`](./kubernetes.yaml).
+
+### Architecture
+- **Secret (`taskflow-secret`)**: Stores database credentials securely.
+- **ConfigMap (`taskflow-config`)**: Stores environment configuration (`NODE_ENV`, `PORT`, `MYSQL_HOST`, etc.).
+- **ConfigMap (`mysql-init-script`)**: Supplies the SQL schema and demo seed tasks for automatic database initialization.
+- **PersistentVolumeClaim (`mysql-pvc`)**: 5Gi persistent volume for MySQL relational data.
+- **MySQL Deployment & Service**: Single-replica stateful MySQL 8 service reachable internally at `mysql:3306`.
+- **App Deployment (`taskflow-app`)**: Multi-replica (2 pods) scalable full-stack application with liveness and readiness health probes.
+- **App Service (`taskflow-service`)**: Exposes the application on port `80` (mapped to targetPort `3000`) with NodePort `30080` / LoadBalancer.
+
+### Deploy to Kubernetes
+
+1. **Deploy all resources**:
+   ```bash
+   kubectl apply -f k8s/
+   # or
+   kubectl apply -f kubernetes.yaml
+   ```
+
+2. **Verify pod statuses**:
+   ```bash
+   kubectl get pods -w
+   ```
+
+3. **Check services**:
+   ```bash
+   kubectl get services
+   ```
+
+4. **Access the application**:
+   - On Minikube: `minikube service taskflow-service`
+   - On Docker Desktop / Kind: [http://localhost:30080](http://localhost:30080) or [http://localhost:80](http://localhost:80)
+   - On Cloud (EKS/GKE/AKS): Use the External IP provided by the LoadBalancer service.
+
+5. **Tear down resources**:
+   ```bash
+   kubectl delete -f k8s/
+   # or
+   kubectl delete -f kubernetes.yaml
+   ```
