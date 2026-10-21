@@ -4,12 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.js",
+    "dev": "node server.js",
     "build": "vite build",
     "start": "node server.js",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "docker:build": "docker build -t taskflow .",
+    "docker:run": "docker run -p 3000:3000 taskflow",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -28,15 +31,7 @@
     "vite": "^8.3.0"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
-    "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
-    "typescript": "^7.0.2"
+    "tailwindcss": "^4.3.3"
   }
 }

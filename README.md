@@ -140,3 +140,38 @@ npm run dev
 npm run build
 npm start
 ```
+
+
+---
+
+## 6. Docker Deployment
+
+### Run with Docker Compose (App + MySQL Database)
+The easiest way to run the entire stack (React frontend, Express backend, and MySQL 8 database with automatic schema initialization) is using Docker Compose:
+
+```bash
+docker compose up -d --build
+```
+Or with npm script:
+```bash
+npm run docker:up
+```
+
+- Application: [http://localhost:3000](http://localhost:3000)
+- MySQL Host Port: `localhost:3306`
+
+To shut down the containers:
+```bash
+docker compose down
+```
+
+### Build & Run the Application Container Standalone
+To build and run just the application container (which uses the automatic persistent local fallback if no external MySQL is attached):
+
+```bash
+# Build Docker image
+docker build -t taskflow .
+
+# Run container
+docker run -p 3000:3000 taskflow
+```

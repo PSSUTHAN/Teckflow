@@ -144,7 +144,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Task Management Server running on port ${PORT}`);
-    console.log(`🌐 Application URL: http://0.0.0.0:${PORT}`);
+    console.log(`🌐 Application URL: http://localhost:${PORT}`);
   });
 }
 
