@@ -8,8 +8,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
       - PORT=3000
+      - NODE_ENV=production
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=taskflow
@@ -34,7 +34,7 @@ services:
       - MYSQL_PASSWORD=taskflow_password
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "taskflow", "-ptaskflow_password"]
       interval: 5s
@@ -45,4 +45,3 @@ services:
 volumes:
   mysql_data:
   app_data:
-
