@@ -110,13 +110,29 @@ def write_fallback_storage(tasks):
 # -------------------------------------------------------------
 # MySQL Connection Management
 # -------------------------------------------------------------
+def get_mysqldb():
+    try:
+        import MySQLdb
+        import MySQLdb.cursors
+        return MySQLdb
+    except ImportError:
+        try:
+            import pymysql
+            pymysql.install_as_MySQLdb()
+            import MySQLdb
+            import MySQLdb.cursors
+            return MySQLdb
+        except ImportError:
+            return None
+
 def get_mysql_connection():
     if not db_state["isConnectedToMySQL"]:
         return None
 
     try:
-        import MySQLdb
-        import MySQLdb.cursors
+        MySQLdb = get_mysqldb()
+        if not MySQLdb:
+            return None
         
         host = os.getenv("MYSQL_HOST", "localhost")
         port = int(os.getenv("MYSQL_PORT", 3306))
@@ -155,7 +171,9 @@ def init_db():
         return
 
     try:
-        import MySQLdb
+        MySQLdb = get_mysqldb()
+        if not MySQLdb:
+            raise ImportError("MySQL driver (mysqlclient or PyMySQL) not available.")
         print(f"Connecting to MySQL at {host}:{port}...")
         
         # Connect to MySQL server (without specifying DB first to ensure DB exists)

@@ -1,6 +1,6 @@
 Flask==3.0.0
 Flask-Cors==4.0.0
 mysqlclient==2.2.8
+PyMySQL==1.1.1
 python-dotenv==1.0.0
 gunicorn==26.0.0
-
